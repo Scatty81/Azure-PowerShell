@@ -129,4 +129,7 @@ foreach($SPOUser in $SPOUsersToMove) {
   }
 
 # lets get an overview of all MoveAndContent status
-Get-SPOUserAndContentMoveState -MoveDirection All | Select-Object UserPrincipalName,SourceDataLocation,DestinationDataLocation,MoveState
+Get-SPOUserAndContentMoveState -MoveDirection All | 
+  Select-Object UserPrincipalName,SourceDataLocation,DestinationDataLocation,MoveState,TimeStamp,@{Name='Country';Expression={(Get-MsolUser -UserPrincipalName $_.UserPrincipalName  | 
+  Select-Object -ExpandProperty Country)}} | 
+  Out-GridView -PassThru
