@@ -30,6 +30,10 @@
   Author: Rutger Hermarij
   email:  GitHub@scatty.nl
   Version 1.0 @ 22-07-2020
+  Version 1.1 @ 06-08-2020
+    Noticed that it actually wasn't needed to check the PreferredDataLocation, 
+    since thats already done in the Set-Employee-GEOLocation script.
+    so...created a better one :D
 .LINK 
   [SYSTEM default ${env:\userprofile} location]     - C:\Windows\System32\config\systemprofile
 .EXAMPLE
@@ -71,32 +75,56 @@ Connect-MsolService -Credential $Credentials;
 # and change github to the correct tenant ;-)
 #Connect-SPOService  -url https://github-admin.sharepoint.com
 
-# So lets read out all Azure where the users have set their PreferredDataLocation
-$UsersToMove = Get-MsolUser -All:$true | 
-  Select-Object UserPrincipalName,PreferredDataLocation,UsageLocation | 
-  Where-Object {
-    ($_.PreferredDataLocation -eq 'APC') -or
-    ($_.PreferredDataLocation -eq 'AUS') -or
-    ($_.PreferredDataLocation -eq 'CAN') -or
-    ($_.PreferredDataLocation -eq 'EUR') -or
-    ($_.PreferredDataLocation -eq 'FRA') -or
-    ($_.PreferredDataLocation -eq 'IND') -or
-    ($_.PreferredDataLocation -eq 'JPN') -or
-    ($_.PreferredDataLocation -eq 'KOR') -or
-    ($_.PreferredDataLocation -eq 'ZAF') -or
-    ($_.PreferredDataLocation -eq 'CHE') -or
-    ($_.PreferredDataLocation -eq 'ARE') -or
-    ($_.PreferredDataLocation -eq 'GBR') -or
-    ($_.PreferredDataLocation -eq 'NAM')
-    }
+# so lets check what users actually have the ReadyToTrigger parameter set.
+$SPOUsersToMove = Get-SPOUserAndContentMoveState -MoveDirection MoveOut | 
+  Select-Object UserPrincipalName,SourceDataLocation,DestinationDataLocation,MoveState,TimeStamp,@{Name='Country';Expression={(Get-MsolUser -UserPrincipalName $_.UserPrincipalName  | Select-Object -ExpandProperty Country)}} | 
+  Where-Object {$_.MoveState -match 'ReadyToTrigger'} | 
+  Sort-Object 'Country'
 
-# lets loop this, and check for ReadyToTrigger status,
-# and start the content to move
-foreach($User in $UsersToMove) {
-  $MoveState = Get-SPOUserAndContentMoveState -UserPrincipalName $user.UserPrincipalName | Select-Object MoveState
-  if($MoveState.MoveState -eq 'ReadyToTrigger') {
-    write-host $User.UserPrincipalName $user.PreferredDataLocation 
-    Start-SPOUserAndContentMove -UserPrincipalName $User.UserPrincipalName -DestinationDataLocation $user.PreferredDataLocation
+# here we can see the output
+#$SPOUsersToMove | Out-GridView
+
+# its possible that you have a lot of data. its better to move the data per country.
+# in case you just want to move it all at the same time, just remove the if function
+foreach($SPOUser in $SPOUsersToMove) {
+  if($SPOUser.Country -match 'Poland') { # August 13
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 13, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Portugal') { # August 14
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 14, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Russian Federation') { # August 15
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 15, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'South Africa') { # August 16
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 16, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Sweden') { # August 17
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 16, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Czech Republic') { # August 18
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 18, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Slovakia') {
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 19, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Northern Mariana Islands') {
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 19, 2020 18:00:00'
+    }
+  elseif($SPOUser.Country -match 'Lithuania') {
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkGreen 
+    Start-SPOUserAndContentMove -UserPrincipalName $SPOUser.UserPrincipalName -DestinationDataLocation $SPOUser.DestinationDataLocation -PreferredMoveBeginDate 'August 19, 2020 18:00:00'
+    }
+    else {
+    write-host $SPOUser.SourceDataLocation $SPOUser.DestinationDataLocation $SPOUser.MoveState $SPOUser.Country  $SPOUser.UserPrincipalName  -BackgroundColor DarkRed
     }
   }
 
